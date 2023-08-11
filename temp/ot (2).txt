@@ -1,0 +1,748 @@
+simplex :
+
+
+
+import numpy as np
+from fractions import Fraction # so that numbers are not displayed in decimal.
+
+print("\n                 Simplex method algorithm ****\n\n")
+
+# inputs
+
+# A will contain the coefficients of the constraints
+A = np.array([[1, 1, 0, 1], [2, 1, 1, 0]])
+# b will contain the amount of resources
+b = np.array([8, 10])
+# c will contain coefficients of objective function Z
+c = np.array([1, 1, 0, 0])
+
+# B will contain the basic variables that make identity matrix
+cb = np.array(c[3])
+B = np.array([[3], [2]])
+ # cb contains their corresponding coefficients in Z
+cb = np.vstack((cb, c[2]))
+xb = np.transpose([b])
+# combine matrices B and cb
+table = np.hstack((B, cb))
+table = np.hstack((table, xb))
+# combine matrices B, cb and xb
+# finally combine matrix A to form the complete simplex table
+table = np.hstack((table, A))
+# change the type of table to float
+table = np.array(table, dtype ='float')
+# inputs end
+
+# if min problem, make this var 1
+MIN = 0
+
+print("Table at itr = 0")
+print("B \tCB \tXB \ty1 \ty2 \ty3 \ty4")
+for row in table:
+    for el in row:
+                # limit the denominator under 100
+        print(Fraction(str(el)).limit_denominator(100), end ='\t')
+    print()
+print()
+print("Simplex Working")
+
+# when optimality reached it will be made 1
+reached = 0
+itr = 1
+unbounded = 0
+alternate = 0
+
+while reached == 0:
+
+    print("Iteration: ", end =' ')
+    print(itr)
+    print("B \tCB \tXB \ty1 \ty2 \ty3 \ty4")
+    for row in table:
+        for el in row:
+            print(Fraction(str(el)).limit_denominator(100), end ='\t')
+        print()
+
+    # calculate Relative profits-> cj - zj for non-basics
+    i = 0
+    rel_prof = []
+    while i<len(A[0]):
+        rel_prof.append(c[i] - np.sum(table[:, 1]*table[:, 3 + i]))
+        i = i + 1
+
+    print("rel profit: ", end =" ")
+    for profit in rel_prof:
+        print(Fraction(str(profit)).limit_denominator(100), end =", ")
+    print()
+    i = 0
+
+    b_var = table[:, 0]
+    # checking for alternate solution
+    while i<len(A[0]):
+        j = 0
+        present = 0
+        while j<len(b_var):
+            if int(b_var[j]) == i:
+                present = 1
+                break;
+            j+= 1
+        if present == 0:
+            if rel_prof[i] == 0:
+                alternate = 1
+                print("Case of Alternate found")
+                # print(i, end =" ")
+        i+= 1
+    print()
+    flag = 0
+    for profit in rel_prof:
+        if profit>0:
+            flag = 1
+            break
+        # if all relative profits <= 0
+    if flag == 0:
+        print("All profits are <= 0, optimality reached")
+        reached = 1
+        break
+
+    # kth var will enter the basis
+    k = rel_prof.index(max(rel_prof))
+    min = 99999
+    i = 0;
+    r = -1
+    # min ratio test (only positive values)
+    while i<len(table):
+        if (table[:, 2][i]>0 and table[:, 3 + k][i]>0):
+            val = table[:, 2][i]/table[:, 3 + k][i]
+            if val<min:
+                min = val
+                r = i     # leaving variable
+        i+= 1
+
+        # if no min ratio test was performed
+    if r ==-1:
+        unbounded = 1
+        print("Case of Unbounded")
+        break
+
+    print("pivot element index:", end =' ')
+    print(np.array([r, 3 + k]))
+
+    pivot = table[r][3 + k]
+    print("pivot element: ", end =" ")
+    print(Fraction(pivot).limit_denominator(100))
+
+        # perform row operations
+    # divide the pivot row with the pivot element
+    table[r, 2:len(table[0])] = table[
+            r, 2:len(table[0])] / pivot
+
+    # do row operation on other rows
+    i = 0
+    while i<len(table):
+        if i != r:
+            table[i, 2:len(table[0])] = table[i,
+                 2:len(table[0])] - table[i][3 + k] *table[r, 2:len(table[0])]
+        i += 1
+
+
+    # assign the new basic variable
+    table[r][0] = k
+    table[r][1] = c[k]
+
+    print()
+    print()
+    itr+= 1
+
+
+print()
+
+if unbounded == 1:
+    print("UNBOUNDED LPP")
+    exit()
+if alternate == 1:
+    print("Alternate Solution")
+
+print("Optimal table:")
+print("B \tCB \tXB \ty1 \ty2 \ty3 \ty4")
+for row in table:
+    for el in row:
+        print(Fraction(str(el)).limit_denominator(100), end ='\t')
+    print()
+print()
+print("Value of Z at optimality: ", end =" ")
+
+basis = []
+i = 0
+sum = 0
+while i<len(table):
+    sum += c[int(table[i][0])]*table[i][2]
+    temp = "x"+str(int(table[i][0])+1)
+    basis.append(temp)
+    i+= 1
+# if MIN problem make z negative
+if MIN == 1:
+    print(-Fraction(str(sum)).limit_denominator(100))
+else:
+    print(Fraction(str(sum)).limit_denominator(100))
+print("Final Basis: ", end =" ")
+print(basis)
+
+print("Simplex Finished...")
+print()
+
+
+
+
+####################################################################################################################################################################################################################################
+
+
+
+Transportation 
+
+
+
+
+import numpy as np
+
+
+'''
+Function to find the northwest corner
+
+input: temp_source temp_dest arrays
+
+returns: row and column value of NW corner
+'''
+def find_north_west_corner(temp_source,temp_dest):
+    for i,s in enumerate(temp_source):
+        if ( s != 0 ):
+            for j,d in enumerate(temp_dest):
+                if ( d != 0 ):
+                    return (i,j)
+
+    return False
+
+'''
+Function to apply northwest corner method
+
+returns: Matrix of the costs for each cell
+'''
+
+def north_west_corner(sources,dest,costs):
+    # temp_sources and dests are used to dectement costs
+    temp_source = sources.copy()
+    temp_dest = dest.copy()
+    n_source,n_dests = costs.shape
+    # To store assigned costs
+    assigned = np.zeros(costs.shape)
+
+    while find_north_west_corner(temp_source,temp_dest):
+        x,y = find_north_west_corner(temp_source,temp_dest)
+        min_cost = min(temp_source[x],temp_dest[y])
+        temp_source[x] -= min_cost
+        temp_dest[y] -= min_cost
+        assigned[x][y] = min_cost
+    return assigned
+
+'''
+Function to find cost given the assignments
+'''
+def get_cost(cost,assigned):
+    total_cost = 0
+    for c_r,a_r in zip(cost,assigned):
+        for c,a in zip(c_r,a_r):
+            total_cost+=c*a
+    return total_cost
+
+
+
+'''
+Function to find the u and v values
+
+input: sources,dest,costs,assigned
+output: u,v values
+
+This function is used to find the u and v values to find the penalty
+
+'''
+def find_uv_values(sources,dest,costs,assigned):
+    # Finding u,v values to find the penalty
+    U = [None for i in range(len(sources))]
+    V = [None for i in range(len(dest))]
+    U[0] = 0
+    # Variable to check if the V and V columns are filled
+    filled = False
+    while not filled:
+        # Iterating through columns to find Vi's
+        for i,row in enumerate(assigned):
+            for j,row_el in enumerate(row):
+                # Only enter if U_i is assigned
+                    if U[i] != None:
+                    # If an assigned row
+                        if row_el > 0 :
+                            # If V is not filled
+                            if V[j] == None:
+                                # Assign new value for V_i
+                                V[j] = costs[i][j] - U[i]
+        # Iterating the rows to find U_i's
+        assigned_T = np.transpose(np.array(assigned))
+        for i,col in enumerate(assigned_T):
+            for j,col_el in enumerate(col):
+                # Only enter if V_i is assigned
+                    if V[i] != None:
+                    # If an assigned row
+                        if col_el > 0 :
+                            # If V is not filled
+                            if U[j] == None:
+                                # Assign new value for V_i
+                                U[j] = costs[i][j] - V[i]
+
+        # Checking if u and v are filled
+        filled_u = True
+        filled_v = True
+        for u in U:
+            if u == None:
+                filled_u == False
+        for v in V:
+            if v == None:
+                filled_v = False
+        if filled_u and filled_v:
+            filled = True
+        else:
+            filled = False
+    return U,V
+
+'''
+Function to find the penalty values
+P = u_i + v_j - c_ij
+
+input: U,V,costs
+output: penalty value matrix
+'''
+def get_penalties(U,V,cost,assigned):
+    penalty = np.zeros(cost.shape)
+    for i,u in enumerate(U):
+        for j,v in enumerate(V):
+            if assigned[i][j] == 0:
+                penalty[i][j] = u+v-cost[i][j]
+    return penalty
+
+'''
+Function to check if the given penalty matrix is optimal
+
+input: penalty matrix
+output: True if optimal else False
+'''
+def check_optimality(penalty):
+    for row in penalty:
+        for el in row:
+            if el > 0:
+                return False
+    return True
+
+'''
+Finding the entering variable which has the maximum penalty
+input: penalty matrix
+'''
+def get_entering_variable_position(penalty):
+    penalty_copy = np.array(penalty)
+    penalty_copy = penalty_copy.flatten()
+    penalty_copy = np.sort(penalty_copy)
+    position = np.where(penalty == penalty_copy[-1])
+    return int(position[0]),int(position[1])
+
+def get_next_cells(matrix, position):
+    x,y = position
+    next_cells = [(x-1,y),(x+1,y),(x,y-1),(x,y+1)]
+    next_cells = [
+                    cell for cell in next_cells if
+                    cell[0] >= 0
+                    and cell[1] >= 0
+                    and cell[0] < matrix.shape[0]
+                    and cell[1] < matrix.shape[1]
+                    and matrix[cell[0], cell[1]] != 0
+                ]
+    return next_cells
+
+
+'''
+Function to find the closed loop to be pivoted
+
+input: cost,assigned,entering_variable
+
+'''
+
+def find_closed_loop(assigned, start, visited, path, check = 0):
+    i, j = start
+    visited[i, j] = 1
+
+    next_cells = get_next_cells(assigned, start)
+    for cell in next_cells:
+        if visited[cell[0], cell[1]] == 0:
+            if cell in path:
+                return path
+            else:
+                visited[cell[0], cell[1]] = 1
+                result = find_closed_loop(assigned, cell, visited, path + [cell],check+1)
+                if result is not None:
+                    return result
+        elif check >= 2:
+            return path
+
+
+def get_closed_loop(assigned, start):
+    visited = np.zeros(assigned.shape)
+    path = [start]
+    final_path = find_closed_loop(assigned, start, visited, path)
+    return final_path
+
+'''
+Function to find the pivot cell
+'''
+def pivoting(cost,assigned,closed_loop):
+    # Finding the pivot cell
+    pivot_cell = closed_loop[1]
+    assigned_copy = np.array(assigned)
+    pivot_cost = assigned[pivot_cell[0],pivot_cell[1]]
+    for i in range(len(closed_loop)):
+        cell = closed_loop[i]
+        if i%2 == 0:
+            assigned_copy[cell[0],cell[1]] += pivot_cost
+        else:
+            assigned_copy[cell[0],cell[1]] -= pivot_cost
+    return assigned_copy
+
+def display_results(cost_matrix, allocations, u_values, v_values):
+    num_sources, num_destinations = cost_matrix.shape
+    # Display the cost matrix
+    print("Cost Matrix:")
+    for i in range(num_sources):
+        for j in range(num_destinations):
+            print("{:<5}".format(cost_matrix[i, j]), end=" ")
+        print()
+
+    print()
+
+    # Display the assigned values
+    print("Assigned Values:")
+    for i in range(num_sources):
+        for j in range(num_destinations):
+            print("{:<5}".format(allocations[i, j]), end=" ")
+        print()
+
+    print()
+
+    # Display the u values
+    print("U Values:")
+    for i in range(num_sources):
+        print("U[{}]: {}".format(i, u_values[i]))
+
+    print()
+
+    # Display the v values
+    print("V Values:")
+    for j in range(num_destinations):
+        print("V[{}]: {}".format(j, v_values[j]))
+
+    print()
+'''
+Program to apply Modi method to find optimal solution
+1. Find u,v values
+2.
+'''
+def Modi_method(sources,dest,costs):
+    # Getting the intial feasibl solution
+    assigned  = north_west_corner(sources,dest,costs)
+    print("initial assigned values : \n",assigned)
+    print("initial cost: ",get_cost(costs,assigned))
+    # Defining penalty P
+    P = lambda u,v,c : u+v-c
+    # Finding u and v values
+    U,V = find_uv_values(sources,dest,costs,assigned)
+    print("Initial U values: ",U)
+    print("Initial V values: ",V)
+    # Finding the penalty matrix
+    penalty = get_penalties(U,V,costs,assigned)
+    print("Initial Penalty matrix: \n",penalty)
+    # Checking if the penalty matrix is optimal
+    while not check_optimality(penalty):
+        start = get_entering_variable_position(penalty)
+        loop = get_closed_loop(assigned,start)
+        assigned = pivoting(costs,assigned,loop)
+        U,V = find_uv_values(sources,dest,costs,assigned)
+        penalty = get_penalties(U,V,costs,assigned)
+        display_results(costs,assigned,U,V)
+
+    print("Final assigned values : \n",assigned)
+
+
+
+if __name__ == "__main__":
+    # input datas
+
+    sources = np.array([250,350,400])
+    dest = np.array([200,300,350,150])
+
+    costs = np.array([
+            [3,1,7,4],
+            [2,6,5,9],
+            [8,3,3,2]
+        ])
+
+    Modi_method(sources,dest,costs)
+
+####################################################################################################################################################################################################################################
+
+Sequencing
+
+def johnsons_algorithm(Job):
+    n = len(Job)
+    machine1 = []
+    machine2 = []
+    for J in range(n):
+        if Job[J][0] < Job[J][1]:
+            machine1.append((Job[J], J))
+        else:
+            machine2.append((Job[J], J))
+    machine1.sort(key=lambda x: x[0][0] - x[0][1])
+    machine2.sort(key=lambda x: x[0][1] - x[0][0])
+
+    sorted_jobs = [J[1] for J in machine1] + [J[1] for J in machine2]
+
+    totaltime = 0
+    machine1_time = 0
+    for J in sorted_jobs:
+        machine1_time += Job[J][0]
+        totaltime = max(totaltime, machine1_time + Job[J][1])
+
+    return sorted_jobs, totaltime
+
+Job = [(3, 2), (1, 4), (6, 1), (2, 5), (4, 3)]
+optimal_sequence, mintime = johnsons_algorithm(Job)
+print("Optimal sequence:", optimal_sequence)
+print("Minimum total processing time:", mintime)
+
+
+
+####################################################################################################################################################################################################################################
+
+
+
+assignment  
+
+
+import numpy as np
+
+'''
+To reduce smallest element from each row and column
+'''
+def reduction(cost):
+
+    num_rows, num_columns = cost.shape
+    # Reducing from rows
+    for i,row in enumerate(cost):
+        min_el = np.min(row)
+        for j,el in enumerate(row):
+            cost[i][j] -= min_el
+    # Reducing from columns
+    for k in range(num_columns):
+        # getting kth column
+        column = cost[:,k]
+        min_el = np.min(column)
+        for l in range(num_rows):
+            cost[l][k] -= min_el
+    return cost
+
+'''
+function to perform assignment given reduced cost matrix
+'''
+def assignment(cost):
+    # assignment Matrix with cross and circles
+    # CROSS = -1 denotes unassigned 0
+    # CIRCLE = 1 denotes an assigned 0
+    assigned = np.zeros(cost.shape)
+    # Traverse via rows
+    for i,row in enumerate(cost):
+        zeros = np.where(row == 0)
+        assigned_row = assigned[i,:]
+        unmarked = False
+        # Check for single unmarked zero
+        for z in zeros[0]:
+            if assigned_row[z] == 0:
+                unmarked = True
+        if unmarked or len(zeros[0]) == 1:
+            # assign the 0
+            assigned[i,zeros[0][0]] = 1
+            # Selecting column with the 0
+            column = cost[:,zeros[0][0]]
+            # Select zeros in the column
+            col_zeros = np.where(column == 0)
+            # Cross the remaining zeros in the column
+            for index in col_zeros[0]:
+                if index != i:
+                    assigned[index,zeros[0][0]] = -1
+    # Traverse via columns
+    num_rows, num_columns = cost.shape
+    for j in range(num_columns):
+        column = cost[:,j]
+        zeros = np.where(column == 0)
+        assigned_column = assigned[:,j]
+        unmarked = False
+        # Check for single unmarked zero
+        for z in zeros[0]:
+            if assigned_column[z] == 0:
+                unmarked = True
+        if unmarked or len(zeros[0]) == 1:
+            # assign the 0
+            assigned[zeros[0][0],j] = 1
+            # Selecting row with the 0
+            row = cost[zeros[0][0],:]
+            # Select zeros in the row
+            row_zeros = np.where(row == 0)
+            # Cross the remaining zeros in the row
+            for index in row_zeros[0]:
+                if index != j:
+                    assigned[zeros[0][0],index] = -1
+    return assigned
+'''
+Function to check if the assignment is optimal
+
+It checks if all the rows and columns have been assigned
+'''
+
+def is_optimal(assigned):
+    num_assigned = np.where(assigned == 1)
+    if len(num_assigned[0]) == assigned.shape[0]:
+        return True
+    else:
+        return False
+
+'''
+Function to mark matrix to get minimal lines via all zeros
+
+marking conditions:
+1. If a row has no assigned zeros, mark the row
+2. columns with 0 in the marked rows, mark the column
+3. rows with assigned 0 in the marked columns, mark the row
+'''
+def mark_assigned_martrix(assigned):
+    mark_row = np.zeros(assigned.shape[0])
+    mark_column = np.zeros(assigned.shape[1])
+    # Marking rows without assigned zeros
+    for i,row in enumerate(assigned):
+        zeros = np.where(row == 1)
+        if len(zeros[0]) == 0:
+            mark_row[i] = 1
+    # Marking columns with zeros in marked rows
+    for j,mark in enumerate(mark_row):
+        # in case of a marked row
+        if mark == 1:
+            row = assigned[j]
+            for r,el in enumerate(row):
+                # presence of 0
+                if el == 1 or el == -1:
+                    mark_column[r] = 1
+    # Marking rows with assigned 0 in the marked columns
+    for k,mark in enumerate(mark_column):
+        # if a marked column
+        if mark == 1 :
+            column = assigned[:,k]
+            for c,mark in enumerate(column):
+                # in the case of an assigned 0
+                if mark == 1:
+                    mark_row[c] = 1
+    return mark_row,mark_column
+
+'''
+Function to find a new cost matrix given the marked rows and columns
+
+Lines are drawn via unmarked rows and marked columns
+1. Find smallest element in the non covered elements
+2. Subtract the smallest element from all non covered
+3. Add it to interesecting lines
+'''
+def get_new_cost_matrix(cost,assigned,mark_row,mark_column):
+    line_column = mark_column.copy()
+    line_row = mark_row.copy()
+    # unmarked rows
+    line_row = 1 - line_row
+    # Finding the smallest uncovered element
+    uncovered = []
+    for i,row in enumerate(assigned):
+        for j,col in enumerate(row):
+            if line_column[j] != 1 and line_row[i] != 1:
+                uncovered.append(cost[i][j])
+    min_el = min(uncovered)
+    # Subtracting and adding min_el
+    for i,row in enumerate(cost):
+        for j,col in enumerate(row):
+            if line_column[j] != 1 and line_row[i] != 1:
+                cost[i][j] -= min_el
+            elif line_column[j] == 1 and line_row[i] == 1:
+                cost[i][j] += min_el
+    return cost
+'''
+Function to get the final solution given assignment matrix
+
+'''
+def get_solution(assigned):
+    solution = []
+    for i,row in enumerate(assigned):
+        for j,col in enumerate(row):
+            if col == 1:
+                solution.append((i,j))
+    return solution
+
+# To print the matrix
+def print_matrix(matrix):
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            print("{:<5}".format(matrix[i, j]), end=" ")
+        print()
+'''
+Hungarian assignment
+
+input: cost 2x2 array
+output: assigned elements
+'''
+def hungarian_assignment(cost):
+    print("Initial cost :\n ")
+    print_matrix(cost)
+    cost = reduction(cost)
+    print("\nReduced Cost: \n")
+    print_matrix(cost)
+    assigned = assignment(cost)
+    print("\nIntitial assignement: \n")
+    print_matrix(assigned)
+    iteration = 0
+    # Iterating till optimality is reached
+    while not is_optimal(assigned):
+        print("\n\niteration {0}".format(iteration))
+        print("\nNot optimal")
+        # Marking rows and columns
+        mark_row, mark_column = mark_assigned_martrix(assigned)
+        print("\nMarked rows: ",mark_row)
+        print("\nMarked columns: ",mark_column)
+        # Getting new cost matrix usign marked rows and columns
+        cost = get_new_cost_matrix(cost,assigned,mark_row,mark_column)
+        print("\nNew cost : \n")
+        print_matrix(cost)
+        # Assigning again for the new cost matrix
+        assigned = assignment(cost)
+        print("\nNew assignment: \n")
+        print_matrix(assigned)
+        iteration += 1
+    # Getting the solution
+    print("Optimality reached")
+    print("\nFinal assigned matrix: \n")
+    print_matrix(assigned)
+    solution = get_solution(assigned)
+    print("Solution: ",solution)
+
+if __name__ == "__main__":
+    cost = np.array([
+        [85, 75, 65, 125, 75],
+        [90, 78, 66, 132, 78],
+        [75, 66, 57, 114, 69],
+        [80, 72, 60, 120, 72],
+        [76, 64, 56, 112, 68]
+    ])
+    hungarian_assignment(cost)
+    print("Done!")
